@@ -12,11 +12,13 @@ import { RepoList } from "./components/RepoList";
 import DependencyList from "./components/DependencyList";
 import { GithubAuth } from "./components/GithubAuth";
 import { GithubProfile } from "./components/GithubProfile";
+// import Spinner from "./components/Spinner";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<RootLayout />} errorElement={<ErrorPage />}>
       <Route index element={<GithubAuth />} />
+      {/* <Route index element={<Spinner />} /> */}
       {/* <Route index element={<TestComp />} /> */}
       <Route path="github/success" element={<GithubProfile />} />
       <Route path="repos" element={<RepoList />} />

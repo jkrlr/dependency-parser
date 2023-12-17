@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import InputSearchBox from "../InputSearchBox";
 import axios from "axios";
+import Spinner from "../Spinner";
 
 const repoData = [
   {
@@ -435,31 +436,37 @@ let { state } = useLocation();
 
 export const RepoList = () => {
   console.log("Render count in src/RepoList/index.tsx: ", window.renderCount++);
-  const [ inputSearch, setInputSearch ] = useState("");
-  const [ repos, setRepos ] = useState([]);
+  const [inputSearch, setInputSearch] = useState("");
+  const [repos, setRepos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const handleInputSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputSearch(e.target.value);
   };
 
   const filteredRepos = repos.filter((repo) =>
-    repo.name.toLowerCase().includes(inputSearch.toLowerCase())
+    repo.name.toLowerCase().includes(inputSearch.toLowerCase()),
   );
 
-  useEffect(() => { 
-    console.log("useEffect called")
-    
+  useEffect(() => {
+    console.log("useEffect called");
+
     async function getUserRepos() {
-      console.log("getUserRepos called")
-      const response = await axios.get('http://localhost:3001/api/repos', { withCredentials: true })
+      console.log("getUserRepos called");
+      const response = await axios.get("http://localhost:3001/api/repos", {
+        withCredentials: true,
+      });
       const data = response.data;
       setRepos(data.data);
-      console.log("repos's data", data)
+      console.log("repos's data", data);
+      setLoading(false);
     }
     getUserRepos();
-  }, [])
+  }, []);
 
-  return (
+  return loading ? (
+    <Spinner />
+  ) : (
     <div className="px-8 py-6">
       <InputSearchBox
         handleInputSearchChange={handleInputSearchChange}
@@ -469,7 +476,7 @@ export const RepoList = () => {
         {filteredRepos.map((repo, idx) => (
           <li
             key={repo.id}
-            className="flex justify-between gap-x-6 p-3 text-base font-bold text-gray-900 rounded-lg bg-gray-200 hover:bg-gray-300 group hover:shadow"
+            className="group flex justify-between gap-x-6 rounded-lg bg-gray-200 p-3 text-base font-bold text-gray-900 hover:bg-gray-300 hover:shadow"
           >
             <div className="flex min-w-0 gap-x-4">
               {/* <img className="h-12 w-12 flex-none rounded-full bg-gray-50" src={repo.owner.avatar_url} alt="" /> */}
@@ -479,7 +486,7 @@ export const RepoList = () => {
                 </p>
                 <Link
                   to={repo.html_url}
-                  className="mt-1 truncate text-xs leading-5 text-blue-700 inline-flex items-center justify-center px-2 py-0.5 ms-3 font-medium bg-gray-100 rounded"
+                  className="ms-3 mt-1 inline-flex items-center justify-center truncate rounded bg-gray-100 px-2 py-0.5 text-xs font-medium leading-5 text-blue-700"
                 >
                   View on Github
                 </Link>

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import InputSearchBox from "../InputSearchBox";
 import axios from "axios";
+import Spinner from "../Spinner";
+import { SpinnerType } from "../../utils/constants";
 
 const data = [
   {
@@ -62,9 +64,13 @@ const data = [
 ];
 
 export default function DependencyList() {
-  console.log("Render count in src/components/DependencyList/index.tsx: ", window.renderCount++)
+  console.log(
+    "Render count in src/components/DependencyList/index.tsx: ",
+    window.renderCount++,
+  );
   const [dependencies, setDependencies] = useState({});
   const [inputSearch, setInputSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const { state } = useLocation();
   const { repo } = state;
@@ -73,85 +79,70 @@ export default function DependencyList() {
 
   const handleInputSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputSearch(e.target.value);
-  }
+  };
 
   const filteredDependencies = Object.entries(dependencies).filter(
     ([dependencyKey, version]) =>
       dependencyKey.toLowerCase().includes(inputSearch.toLowerCase()) ||
-      (version as string).includes(inputSearch)
+      (version as string).includes(inputSearch),
   );
 
   useEffect(() => {
     async function getDependencies() {
-        console.log("getDependencies called")
-        const response = await axios.get('http://localhost:3001/api/dependencies', { params: { reponame: repo.name, username: repo.owner.login }, withCredentials: true })
-        const data = response.data;
+      console.log("getDependencies called");
+      const response = await axios.get(
+        "http://localhost:3001/api/dependencies",
+        {
+          params: { reponame: repo.name, username: repo.owner.login },
+          withCredentials: true,
+        },
+      );
+      const data = response.data;
       console.log(data);
       setDependencies(data.data);
+      setLoading(false);
     }
 
     getDependencies();
-  }, [])
+  }, []);
 
-  // ToDO: Add a loading spinner and error handling cases for no-internet 
+  // ToDO: Add error handling cases for no-internet
 
-  return (
+  return loading ? (
+    <Spinner type={SpinnerType.PROGRESS} />
+  ) : (
     <div className="flex flex-col">
-      {/* <div className="m-4 pt-4 w-full max-w-sm mx-auto">
-        <div className="relative flex items-center w-full h-12 rounded-lg focus-within:shadow-lg bg-white overflow-hidden outline outline-1 outline-gray-500 focus:outline-none">
-          <div className="grid place-items-center h-full w-12 text-gray-300">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <input
-            className="peer h-full w-full outline-none text-sm text-gray-700 pr-2"
-            type="text"
-            id="search"
-            placeholder="Search by Group, Artifact or Version"
-            onChange={(e) => setInputSearch(e.target.value)}
-          />
-        </div>
-      </div> */}
-      <InputSearchBox handleInputSearchChange={handleInputSearchChange} placeholder="Search by Group, Artifact or Version" />
+      <InputSearchBox
+        handleInputSearchChange={handleInputSearchChange}
+        placeholder="Search by Group, Artifact or Version"
+      />
       <div className="m-4 overflow-x-auto">
-        <div className="p-1.5 min-w-full inline-block align-middle">
-          <div className="border rounded-lg shadow overflow-hidden dark:border-gray-700 dark:shadow-gray-900">
+        <div className="inline-block min-w-full p-1.5 align-middle">
+          <div className="overflow-hidden rounded-lg border shadow dark:border-gray-700 dark:shadow-gray-900">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-gray-200"
+                    className="px-6 py-3 text-start text-xs font-medium uppercase text-gray-500 dark:text-gray-200"
                   >
                     #
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-gray-200"
+                    className="px-6 py-3 text-start text-xs font-medium uppercase text-gray-500 dark:text-gray-200"
                   >
                     Group
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-gray-200"
+                    className="px-6 py-3 text-start text-xs font-medium uppercase text-gray-500 dark:text-gray-200"
                   >
                     Artifact
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-gray-200"
+                    className="px-6 py-3 text-start text-xs font-medium uppercase text-gray-500 dark:text-gray-200"
                   >
                     Version
                   </th>
@@ -161,20 +152,20 @@ export default function DependencyList() {
                 {filteredDependencies
                   .sort()
                   .map(([dependencyKey, version], idx) => {
-                    const [ groupId, artifactId ] = dependencyKey.split("|");
+                    const [groupId, artifactId] = dependencyKey.split("|");
                     return (
                       <tr key={dependencyKey} className="hover:bg-neutral-100">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-800">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-gray-800">
                           {idx + 1}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-800">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-800 dark:text-gray-800">
                           {groupId ? groupId : ""}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-800">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-gray-800">
                           {artifactId ? artifactId : ""}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-800">
-                        {typeof version === 'string' ? version : ""}
+                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-800 dark:text-gray-800">
+                          {typeof version === "string" ? version : ""}
                         </td>
                       </tr>
                     );
